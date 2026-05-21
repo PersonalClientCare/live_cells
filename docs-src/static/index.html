@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live Cells — Reactive Programming for Dart &amp; Flutter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #f4f7fb;
+      --bg2:         #eaf0f8;
+      --bg3:         #dde8f3;
+      --surface:     #d0e0ef;
+      --surface2:    #c2d5e8;
+      --border:      rgba(65,104,152,0.13);
+      --border2:     rgba(65,104,152,0.24);
+      --text:        #131f30;
+      --text2:       #3d5572;
+      --text3:       #7a96b8;
+      --accent:      #416898;
+      --accent-dim:  rgba(65,104,152,0.13);
+      --accent-dim2: rgba(65,104,152,0.07);
+      --accent2:     #2e9cca;
+      --accent2-dim: rgba(46,156,202,0.1);
+      --code-bg:     #edf2f8;
+      --red:         #c0392b;
+      --amber:       #b7700a;
+      --serif: 'Instrument Serif', Georgia, serif;
+      --sans: 'DM Sans', system-ui, sans-serif;
+      --mono: 'DM Mono', 'Fira Code', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2.5rem;
+      height: 60px;
+      background: rgba(244,247,251,0.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 1.05rem; font-weight: 500; letter-spacing: 0.01em; color: var(--text);
+      text-decoration: none;
+    }
+    .nav-logo-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 10px rgba(65,104,152,0.5);
+      animation: pulse 2.4s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity:1; transform:scale(1); }
+      50% { opacity:0.5; transform:scale(0.7); }
+    }
+    .nav-links { display: flex; gap: 1.75rem; align-items: center; }
+    .nav-links a {
+      color: var(--text2); font-size: 0.875rem; text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta {
+      background: var(--accent-dim); border: 1px solid rgba(65,104,152,0.28);
+      color: var(--accent) !important; padding: 0.35rem 1rem;
+      border-radius: 6px; font-size: 0.875rem !important;
+      transition: background 0.2s !important;
+    }
+    .nav-cta:hover { background: rgba(65,104,152,0.18) !important; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 7rem 2rem 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-grid-bg {
+      position: absolute; inset: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(65,104,152,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(65,104,152,0.05) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 30%, transparent 100%);
+    }
+    .hero-glow {
+      position: absolute; top: 10%; left: 50%; transform: translateX(-50%);
+      width: 700px; height: 400px;
+      background: radial-gradient(ellipse, rgba(65,104,152,0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: var(--accent-dim2); border: 1px solid rgba(65,104,152,0.22);
+      color: var(--accent); font-size: 0.75rem; font-family: var(--mono);
+      padding: 0.3rem 0.85rem; border-radius: 100px; margin-bottom: 2rem;
+      letter-spacing: 0.05em;
+    }
+    .hero-badge span { opacity: 0.6; }
+    h1 {
+      font-family: var(--serif);
+      font-size: clamp(2.8rem, 6vw, 5.5rem);
+      font-weight: 400;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      max-width: 820px;
+      margin: 0 auto 1.5rem;
+    }
+    h1 em {
+      font-style: italic;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero-sub {
+      font-size: 1.1rem; color: var(--text2); max-width: 540px;
+      margin: 0 auto 2.5rem; font-weight: 300; line-height: 1.75;
+    }
+    .hero-actions {
+      display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
+      margin-bottom: 4rem;
+    }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: var(--accent); color: #ffffff;
+      padding: 0.7rem 1.75rem; border-radius: 8px;
+      font-weight: 500; font-size: 0.9rem; text-decoration: none;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 16px rgba(65,104,152,0.28);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(65,104,152,0.38); }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: transparent; color: var(--text);
+      border: 1px solid var(--border2);
+      padding: 0.7rem 1.75rem; border-radius: 8px;
+      font-weight: 400; font-size: 0.9rem; text-decoration: none;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .btn-secondary:hover { background: var(--surface); border-color: var(--border2); }
+
+    /* ── INSTALL SNIPPET ── */
+    .install-snippet {
+      display: inline-flex; align-items: center; gap: 1rem;
+      background: var(--code-bg); border: 1px solid var(--border);
+      border-radius: 10px; padding: 0.7rem 1.25rem;
+      font-family: var(--mono); font-size: 0.85rem; color: var(--text2);
+    }
+    .install-snippet code { color: var(--accent); }
+    .copy-btn {
+      background: none; border: none; cursor: pointer;
+      color: var(--text3); font-size: 0.75rem; font-family: var(--sans);
+      transition: color 0.2s; padding: 0;
+    }
+    .copy-btn:hover { color: var(--accent); }
+
+    /* ── SECTION LAYOUT ── */
+    section { padding: 6rem 2rem; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .section-label {
+      font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.12em;
+      color: var(--accent); text-transform: uppercase; margin-bottom: 0.75rem;
+    }
+    .section-title {
+      font-family: var(--serif); font-size: clamp(1.8rem, 3.5vw, 2.75rem);
+      font-weight: 400; line-height: 1.2; color: var(--text);
+      margin-bottom: 1rem;
+    }
+    .section-sub {
+      font-size: 1rem; color: var(--text2); max-width: 520px;
+      line-height: 1.75; font-weight: 300;
+    }
+    .section-header { margin-bottom: 3.5rem; }
+
+    /* ── FEATURES GRID ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .feature-card {
+      background: var(--bg);
+      padding: 2rem 1.75rem;
+      position: relative;
+      transition: background 0.2s;
+    }
+    .feature-card:hover { background: var(--bg2); }
+    .feature-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: var(--accent-dim2); border: 1px solid rgba(65,104,152,0.18);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 1rem; font-size: 1rem;
+    }
+    .feature-card h3 {
+      font-size: 0.95rem; font-weight: 500; color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+    .feature-card p { font-size: 0.875rem; color: var(--text2); line-height: 1.65; }
+
+    /* ── CODE COMPARISON ── */
+    .comparison {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
+    }
+    @media (max-width: 700px) { .comparison { grid-template-columns: 1fr; } }
+    .code-card {
+      background: var(--code-bg); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden;
+    }
+    .code-card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .code-card-header .label {
+      font-family: var(--mono); font-size: 0.7rem;
+      letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .label-before { color: var(--red); }
+    .label-after { color: var(--accent); }
+    .code-card pre {
+      padding: 1.25rem 1.25rem 1.5rem;
+      font-family: var(--mono); font-size: 0.78rem;
+      line-height: 1.7; color: var(--text2);
+      overflow-x: auto;
+      margin: 0;
+    }
+    .code-card pre .kw, .concept-card pre .kw  { color: #7c3aed; }
+    .code-card pre .fn, .concept-card pre .fn  { color: #1d6fa5; }
+    .code-card pre .str, .concept-card pre .str { color: #2d6a0e; }
+    .code-card pre .num, .concept-card pre .num { color: #c05621; }
+    .code-card pre .cm, .concept-card pre .cm  { color: #8a9bb5; }
+    .code-card pre .type, .concept-card pre .type{ color: #b45309; }
+    .code-card pre .acc, .concept-card pre .acc { color: var(--accent); }
+    .code-card pre .acc2, .concept-card pre .acc2{ color: var(--accent2); }
+    .bad-line  { background: rgba(192,57,43,0.06);  display: block; margin: 0 -1.25rem; padding: 0 1.25rem; }
+    .good-line { background: rgba(65,104,152,0.08); display: block; margin: 0 -1.25rem; padding: 0 1.25rem; }
+
+    /* ── CONCEPTS ── */
+    .concepts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    @media (max-width: 700px) { .concepts-grid { grid-template-columns: 1fr; } }
+    .concept-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1.5rem;
+      transition: border-color 0.2s;
+    }
+    .concept-card:hover { border-color: var(--border2); }
+    .concept-card h3 {
+      font-family: var(--mono); font-size: 0.85rem;
+      color: var(--accent); margin-bottom: 0.6rem;
+    }
+    .concept-card p { font-size: 0.85rem; color: var(--text2); line-height: 1.65; margin-bottom: 1rem; }
+    .concept-card pre {
+      background: var(--code-bg); border-radius: 8px;
+      padding: 0.85rem 1rem;
+      font-family: var(--mono); font-size: 0.75rem;
+      color: var(--text2); line-height: 1.65;
+      overflow-x: auto; margin: 0;
+    }
+
+    /* ── ADVANTAGES ── */
+    .advantages-list {
+      display: flex; flex-direction: column; gap: 1rem;
+    }
+    .advantage-row {
+      display: flex; align-items: flex-start; gap: 1rem;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.25rem 1.5rem;
+    }
+    .advantage-check {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--accent-dim); border: 1px solid rgba(65,104,152,0.32);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 2px;
+      font-size: 0.65rem; color: var(--accent);
+    }
+    .advantage-row h4 { font-size: 0.9rem; font-weight: 500; color: var(--text); margin-bottom: 0.25rem; }
+    .advantage-row p { font-size: 0.83rem; color: var(--text2); }
+
+    /* ── TWO WAY DEMO ── */
+    .two-way-demo {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 16px; padding: 2rem; overflow: hidden;
+    }
+    .two-way-demo h4 {
+      font-family: var(--mono); font-size: 0.7rem;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 1.5rem;
+    }
+    .demo-cells {
+      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .demo-cell {
+      background: var(--code-bg); border: 1px solid var(--border2);
+      border-radius: 8px; padding: 0.6rem 1rem;
+      font-family: var(--mono); font-size: 0.85rem;
+      display: flex; flex-direction: column; gap: 0.2rem; min-width: 120px;
+    }
+    .demo-cell .cell-label { font-size: 0.65rem; color: var(--text3); letter-spacing: 0.05em; }
+    .demo-cell .cell-val { color: var(--accent); font-weight: 500; }
+    .demo-arrow { color: var(--text3); font-size: 1.2rem; }
+    .demo-note { font-size: 0.78rem; color: var(--text3); font-family: var(--mono); }
+    .demo-slider { width: 100%; margin: 1rem 0; accent-color: var(--accent); }
+
+    /* ── CTA STRIP ── */
+    .cta-strip {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .cta-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 2rem;
+    }
+    .cta-strip h2 {
+      font-family: var(--serif); font-size: clamp(1.5rem, 3vw, 2.2rem);
+      font-weight: 400; color: var(--text); max-width: 500px;
+    }
+    .cta-strip h2 em { font-style: italic; color: var(--accent); }
+
+    /* ── QUICK START STEPS ── */
+    .steps { counter-reset: step; display: flex; flex-direction: column; gap: 1rem; }
+    .step {
+      display: flex; gap: 1.25rem; align-items: flex-start;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.25rem 1.5rem;
+    }
+    .step-num {
+      counter-increment: step;
+      width: 26px; height: 26px; flex-shrink: 0;
+      background: var(--accent-dim); border: 1px solid rgba(65,104,152,0.28);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-family: var(--mono); font-size: 0.7rem; color: var(--accent);
+    }
+    .step-num::after { content: counter(step); }
+    .step h4 { font-size: 0.9rem; font-weight: 500; color: var(--text); margin-bottom: 0.4rem; }
+    .step code {
+      font-family: var(--mono); font-size: 0.8rem;
+      background: var(--code-bg); border: 1px solid var(--border);
+      padding: 0.2rem 0.5rem; border-radius: 4px; color: var(--accent);
+    }
+    .step p { font-size: 0.83rem; color: var(--text2); }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 2rem;
+      text-align: center;
+    }
+    footer p { font-size: 0.8rem; color: var(--text3); }
+    footer a { color: var(--text2); text-decoration: none; }
+    footer a:hover { color: var(--accent); }
+
+    /* ── DIVIDER ── */
+    .divider { height: 1px; background: var(--border); }
+
+    /* ── USED BY ── */
+    .used-by { padding: 5rem 2rem; border-top: 1px solid var(--border); }
+    .used-by-label {
+      text-align: center; font-family: var(--mono); font-size: 0.7rem;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--text3); margin-bottom: 2.5rem;
+    }
+    .used-by-grid {
+      display: flex; flex-wrap: wrap; justify-content: center;
+      gap: 1rem; align-items: center;
+    }
+    .used-by-card {
+      display: flex; align-items: center; gap: 0.75rem;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 0.65rem 1.25rem;
+      text-decoration: none; color: var(--text2);
+      font-size: 1.5rem; font-weight: 400;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+    .used-by-card:hover {
+      border-color: var(--border2); color: var(--text);
+      background: var(--surface);
+    }
+    .used-by-card .app-icon img {
+      width: 4em; height: 4em; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; flex-shrink: 0;
+    }
+    .used-by-note {
+      text-align: center; margin-top: 2rem;
+      font-size: 0.78rem; color: var(--text3);
+    }
+    .used-by-note a { color: var(--text2); text-decoration: none; }
+    .used-by-note a:hover { color: var(--accent); }
+
+    /* ── SPONSORED BY ── */
+    .sponsored { padding: 4rem 2rem; border-top: 1px solid var(--border); }
+    .sponsored-label {
+      text-align: center; font-family: var(--mono); font-size: 0.7rem;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--text3); margin-bottom: 2rem;
+    }
+    .sponsor-grid {
+      display: flex; flex-wrap: wrap; justify-content: center;
+      align-items: center; gap: 1.25rem;
+    }
+    .sponsor-card {
+      display: flex; align-items: center; gap: 1rem;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1rem 1.5rem;
+      text-decoration: none;
+      transition: border-color 0.2s, background 0.2s;
+      min-width: 220px; max-width: 280px;
+    }
+    .sponsor-card:hover { border-color: var(--border2); background: var(--surface); }
+    .sponsor-logo {
+      width: 4em; height: 4em; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.35rem; flex-shrink: 0;
+    }
+    .sponsor-logo img {
+      width: 4em;
+      height: 4em;
+    }
+    .sponsor-card h4 { font-size: 0.875rem; font-weight: 500; color: var(--text); }
+    .sponsor-card p  { font-size: 0.75rem; color: var(--text3); margin-top: 1px; }
+    .sponsor-tier {
+      display: inline-block; font-family: var(--mono); font-size: 0.65rem;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.2rem 0.55rem; border-radius: 4px; margin-top: 0.3rem;
+    }
+    .tier-gold {
+      background: rgba(183,112,10,0.1); border: 1px solid rgba(183,112,10,0.25);
+      color: #7a4a00;
+    }
+    .tier-silver {
+      background: rgba(65,104,152,0.1); border: 1px solid rgba(65,104,152,0.22);
+      color: var(--text2);
+    }
+    .sponsor-cta {
+      text-align: center; margin-top: 2rem;
+      font-size: 0.8rem; color: var(--text3);
+    }
+    .sponsor-cta a {
+      color: var(--accent); text-decoration: none;
+      border-bottom: 1px solid rgba(79,255,176,0.3);
+      padding-bottom: 1px; transition: border-color 0.2s;
+    }
+    .sponsor-cta a:hover { border-color: var(--accent); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      nav { padding: 0 1.25rem; }
+      .nav-links { gap: 1rem; }
+      .hero { padding: 5.5rem 1.25rem 3rem; }
+      section { padding: 4rem 1.25rem; }
+      .cta-inner { flex-direction: column; }
+    }
+    @media (max-width: 480px) {
+      .nav-links .hide-mobile { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">
+    <span class="nav-logo-dot"></span>
+    Live Cells
+  </a>
+  <div class="nav-links">
+    <a href="#features" class="hide-mobile">Features</a>
+    <a href="#concepts" class="hide-mobile">Concepts</a>
+    <a href="#quickstart" class="hide-mobile">Quick Start</a>
+    <a href="docs/intro" class="nav-cta">Docs →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid-bg"></div>
+  <div class="hero-glow"></div>
+
+  <div class="hero-badge">
+    <span>✦</span> Dart &amp; Flutter &nbsp;·&nbsp; v0.34.0
+  </div>
+
+  <h1>Reactive state,<br /><em>the way it should feel.</em></h1>
+
+  <p class="hero-sub">
+    Live Cells brings true reactivity to your Dart &amp; Flutter data layer.
+    Declare cells, compose them, and let your UI respond automatically—no boilerplate, no manual listeners, no <code style="font-family:var(--mono);font-size:0.9em;color:var(--text)">dispose()</code>.
+  </p>
+
+  <div class="hero-actions">
+    <a href="docs/intro" class="btn-primary">
+      Get Started
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+    <a href="https://pub.dev/packages/live_cells" class="btn-secondary">
+      View on pub.dev
+    </a>
+  </div>
+
+  <div class="install-snippet">
+    <code>flutter pub add live_cells</code>
+    <button class="copy-btn" onclick="navigator.clipboard.writeText('flutter pub add live_cells');this.textContent='✓ copied';setTimeout(()=>this.textContent='copy',1800)">copy</button>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="container">
+    <div class="section-header">
+      <p class="section-label">Why Live Cells</p>
+      <h2 class="section-title">Built for Flutter's<br />reactive model</h2>
+      <p class="section-sub">Everything you need to write expressive, composable state logic without fighting the framework.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>Automatic propagation</h3>
+        <p>Observers are notified automatically when cell values change. Define a computed cell once and it stays in sync forever.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">↔</div>
+        <h3>Two-way data flow</h3>
+        <p>Unique among reactive libraries: data can flow in <em>both</em> directions. Bind a text field to a number cell with a single line.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🗑</div>
+        <h3>No dispose() calls</h3>
+        <p>Cells manage their own lifecycle. No more forgetting to remove listeners or call <code style="font-family:var(--mono);font-size:0.85em">dispose()</code>—memory cleans itself up.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🧩</div>
+        <h3>Composable expressions</h3>
+        <p>Write <code style="font-family:var(--mono);font-size:0.85em">a + b</code> and get a cell whose value is always the sum. Functional composition, no listener wiring.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎛</div>
+        <h3>Widget integration</h3>
+        <p>Drop-in reactive widgets—<code style="font-family:var(--mono);font-size:0.85em">LiveSwitch</code>, <code style="font-family:var(--mono);font-size:0.85em">LiveTextField</code>, <code style="font-family:var(--mono);font-size:0.85em">CellWidget</code>—bind directly to cells with no state management ceremony.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💾</div>
+        <h3>State restoration</h3>
+        <p>Persist and restore app state with minimal boilerplate. Cells that survive process death, with no extra wiring.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARISON -->
+<section style="padding-top:0">
+  <div class="container">
+    <div class="section-header">
+      <p class="section-label">Before &amp; After</p>
+      <h2 class="section-title">Less ceremony,<br />more clarity</h2>
+      <p class="section-sub">See the difference when reactive state is a first-class citizen of your data layer.</p>
+    </div>
+
+    <div class="comparison">
+      <div class="code-card">
+        <div class="code-card-header">
+          <span class="label label-before">Without Live Cells</span>
+          <span style="font-size:0.7rem;color:var(--text3);font-family:var(--mono)">ValueNotifier</span>
+        </div>
+        <pre><span class="bad-line"><span class="kw">final</span> a = <span class="type">ValueNotifier</span>&lt;<span class="type">int</span>&gt;(<span class="num">0</span>);</span>
+<span class="bad-line"><span class="kw">final</span> b = <span class="type">ValueNotifier</span>&lt;<span class="type">int</span>&gt;(<span class="num">1</span>);</span>
+<span class="bad-line"><span class="kw">late final</span> sum = <span class="type">ValueNotifier</span>&lt;<span class="type">int</span>&gt;(<span class="num">0</span>);</span>
+// Wire listeners manually</span>
+<span class="bad-line"><span class="kw">void</span> <span class="fn">_updateSum</span>() {</span>
+<span class="bad-line">  sum.value = a.value + b.value;</span>
+<span class="bad-line">  <span class="fn">print</span>(<span class="str">'${</span><span class="fn">a.value</span><span class="str">} + ${</span><span class="fn">b.value</span><span class="str">} = ${</span><span class="fn">sum.value</span><span class="str">}'</span>);</span>
+<span class="bad-line">}</span>
+// Remember to add AND remove</span>
+<span class="bad-line">a.<span class="fn">addListener</span>(_updateSum);</span>
+<span class="bad-line">b.<span class="fn">addListener</span>(_updateSum);</span>
+...
+<span class="cm">@override</span>
+<span class="bad-line"><span class="kw">void</span> <span class="fn">dispose</span>() {</span>
+<span class="bad-line">  a.<span class="fn">removeListener</span>(_updateSum);</span>
+<span class="bad-line">  b.<span class="fn">removeListener</span>(_updateSum);</span>
+<span class="bad-line">  a.<span class="fn">dispose</span>();</span>
+<span class="bad-line">  b.<span class="fn">dispose</span>();</span>
+<span class="bad-line">  sum.<span class="fn">dispose</span>();</span>
+<span class="bad-line">  <span class="kw">super</span>.<span class="fn">dispose</span>();</span>
+<span class="bad-line">}</span></pre>
+      </div>
+
+      <div class="code-card">
+        <div class="code-card-header">
+          <span class="label label-after">With Live Cells</span>
+          <span style="font-size:0.7rem;color:var(--text3);font-family:var(--mono)">MutableCell</span>
+        </div>
+        <pre><span class="good-line"><span class="kw">final</span> a = <span class="acc2">MutableCell</span>(<span class="num">0</span>);</span>
+<span class="good-line"><span class="kw">final</span> b = <span class="acc2">MutableCell</span>(<span class="num">1</span>);</span>
+// Reactive expression — just works</span>
+<span class="good-line"><span class="kw">final</span> sum = a + b;</span>
+// Observe — no manual wiring</span>
+<span class="good-line"><span class="acc">ValueCell</span>.<span class="fn">watch</span>(() {</span>
+<span class="good-line">  <span class="fn">print</span>(<span class="str">'${</span><span class="fn">a()</span><span class="str">} + ${</span><span class="fn">b()</span><span class="str">} = ${</span><span class="fn">sum()</span><span class="str">}'</span>);</span>
+<span class="good-line">});</span>
+// No dispose() needed.
+// Ever.</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CORE CONCEPTS -->
+<section id="concepts">
+  <div class="container">
+    <div class="section-header">
+      <p class="section-label">Core Concepts</p>
+      <h2 class="section-title">One abstraction<br />to learn</h2>
+      <p class="section-sub">The cell is the only primitive. Master it and you have mastered the library.</p>
+    </div>
+
+    <div class="concepts-grid">
+      <div class="concept-card">
+        <h3>// Mutable cells</h3>
+        <p>The entry point to reactivity. Set a value; observers fire automatically.</p>
+        <pre><span class="kw">final</span> count = <span class="acc2">MutableCell</span>(<span class="num">0</span>);
+count.value++;   <span class="cm">// triggers observers</span></pre>
+      </div>
+
+      <div class="concept-card">
+        <h3>// Computed cells</h3>
+        <p>Derive state from other cells with plain expressions or <code>ValueCell.computed</code>.</p>
+        <pre><span class="kw">final</span> doubled = count * <span class="num">2</span>.cell;
+<span class="cm">// or</span>
+<span class="kw">final</span> label = <span class="acc">ValueCell</span>.<span class="fn">computed</span>(
+  () =&gt; <span class="str">'Count: ${</span><span class="fn">count()</span><span class="str">}'</span>,
+);</pre>
+      </div>
+
+      <div class="concept-card">
+        <h3>// Two-way flow</h3>
+        <p>Bind a numeric cell to a text field. Changes flow both ways automatically.</p>
+        <pre><span class="kw">final</span> n = <span class="acc2">MutableCell</span>&lt;<span class="type">num</span>&gt;(<span class="num">0</span>);
+
+<span class="acc2">LiveTextField</span>(
+  content: n.<span class="fn">mutableString</span>(),
+);</pre>
+      </div>
+
+      <div class="concept-card">
+        <h3>// Widget binding</h3>
+        <p>Rebuild only the widgets that need to—no <code>setState</code>, no provider lookup.</p>
+        <pre><span class="kw">final</span> count = <span class="acc2">MutableCell</span>(<span class="num">0</span>);
+<span class="kw">final</span> isEnabled = <span class="acc2">MutableCell</span>(<span class="kw">true</span>);
+
+...          
+
+<span class="acc2">CellWidget</span>.<span class="fn">builder</span>(() =&gt;
+  <span class="acc2">Text</span>(<span class="str">'${</span><span class="fn">count()</span><span class="str">}'</span>)
+);
+
+...
+
+<span class="acc2">LiveSwitch</span>(value: isEnabled);</pre>
+      </div>
+
+      <div class="concept-card">
+        <h3>// Async cells</h3>
+        <p>Await futures held in cells. Computed cells propagate loading state too.</p>
+        <pre><span class="kw">final</span> isLoading = (c1, c2).isCompleted.<span class="fn">not</span>();
+
+<span class="kw">final</span> sum = <span class="acc">ValueCell</span>.<span class="fn">computed</span>(() {
+  <span class="kw">final</span> (a, b) = (c1, c2).<span class="fn">wait</span>();
+  <span class="kw">return</span> a + b;
+});</pre>
+      </div>
+
+      <div class="concept-card">
+        <h3>// Error handling</h3>
+        <p>Exceptions propagate through cell chains. Handle them where it makes sense.</p>
+        <pre><span class="kw">final</span> str = <span class="acc2">MutableCell</span>(<span class="str">'0'</span>);
+
+<span class="kw">final</span> n = <span class="acc">ValueCell</span>.<span class="fn">computed</span>(
+  () =&gt; <span class="type">int</span>.<span class="fn">parse</span>(<span class="fn">str()</span>),
+);
+
+<span class="kw">final</span> valid = (n &gt; <span class="num">0</span>.cell)
+  .<span class="fn">onError</span>(<span class="kw">false</span>.cell);</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ADVANTAGES -->
+<section style="padding-top:0">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:start">
+      <div>
+        <p class="section-label">Advantages</p>
+        <h2 class="section-title">Beyond <code style="font-family:var(--mono);font-size:0.75em">ChangeNotifier</code></h2>
+        <p class="section-sub" style="margin-bottom:2.5rem">Live Cells solves the friction points you've accepted as normal in Flutter state management.</p>
+        <div class="advantages-list">
+          <div class="advantage-row">
+            <div class="advantage-check">✓</div>
+            <div>
+              <h4>Unopinionated</h4>
+              <p>No forced architecture. Use as much or as little of Live Cells as you need. Integrate incrementally.</p>
+            </div>
+          </div>
+          <div class="advantage-row">
+            <div class="advantage-check">✓</div>
+            <div>
+              <h4>Drop-in for ValueListenable</h4>
+              <p>The <code style="font-family:var(--mono);font-size:0.85em">.listenable</code> property wraps any cell as a <code style="font-family:var(--mono);font-size:0.85em">ValueListenable</code>—use it wherever Flutter expects one.</p>
+            </div>
+          </div>
+          <div class="advantage-row">
+            <div class="advantage-check">✓</div>
+            <div>
+              <h4>Previous value access</h4>
+              <p>Need the last value of a cell? Just use <code style="font-family:var(--mono);font-size:0.85em">cell.previous</code>—it's a cell too.</p>
+            </div>
+          </div>
+          <div class="advantage-row">
+            <div class="advantage-check">✓</div>
+            <div>
+              <h4>Code-gen for your types</h4>
+              <p><code style="font-family:var(--mono);font-size:0.85em">live_cell_extension</code> generates property accessors so you can use cell syntax on your own model classes.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIVE DEMO -->
+      <!-- <div>
+        <p class="section-label">Interactive demo</p>
+        <h3 style="font-family:var(--serif);font-size:1.5rem;font-weight:400;color:var(--text);margin-bottom:1.5rem">Two-way data flow, live</h3>
+        <div class="two-way-demo">
+          <h4>// cells update both ways</h4>
+          <div class="demo-cells">
+            <div class="demo-cell">
+              <span class="cell-label">n (numeric)</span>
+              <span class="cell-val" id="demo-num">50</span>
+            </div>
+            <span class="demo-arrow">↔</span>
+            <div class="demo-cell">
+              <span class="cell-label">n.mutableString()</span>
+              <span class="cell-val" id="demo-str">"50"</span>
+            </div>
+            <span class="demo-arrow">=</span>
+            <div class="demo-cell">
+              <span class="cell-label">doubled</span>
+              <span class="cell-val" id="demo-doubled">100</span>
+            </div>
+          </div>
+          <input type="range" min="0" max="100" value="50" class="demo-slider" id="demo-slider" />
+          <p class="demo-note">← drag to change <code style="color:var(--accent)">n</code>; <code>doubled</code> = n × 2 recomputes automatically</p>
+        </div>
+      </div>
+    </div>
+  </div> -->
+</section>
+
+<!-- USED BY -->
+<section class="used-by">
+  <div class="container">
+    <p class="used-by-label">Used by developers building with Flutter</p>
+    <div class="used-by-grid">
+      <a class="used-by-card" href="https://tablequest.app" target="_blank">
+        <div class="app-icon" style="background:rgba(46,156,202,0.1);">
+          <img src="images/tablequest-logo.svg" />
+        </div>
+        Table Quest
+      </a>
+      <!-- <a class="used-by-card" href="#">
+        <div class="app-icon" style="background:rgba(65,104,152,0.1);">🛒</div>
+        ShopDash
+      </a>
+      <a class="used-by-card" href="#">
+        <div class="app-icon" style="background:rgba(183,112,10,0.1);">📊</div>
+        FinTrack
+      </a>
+      <a class="used-by-card" href="#">
+        <div class="app-icon" style="background:rgba(124,58,237,0.08);">🎵</div>
+        Melody Stream
+      </a>
+      <a class="used-by-card" href="#">
+        <div class="app-icon" style="background:rgba(192,57,43,0.08);">❤️</div>
+        HealthPulse
+      </a>
+      <a class="used-by-card" href="#">
+        <div class="app-icon" style="background:rgba(65,104,152,0.1);">📝</div>
+        NoteFlow
+      </a> -->
+    </div>
+    <p class="used-by-note">
+      Using Live Cells in your app?
+      <a href="https://github.com/alex-gutev/live_cells/issues">Open a PR to add it here →</a>
+    </p>
+  </div>
+</section>
+
+<!-- SPONSORED BY -->
+<section class="sponsored">
+  <div class="container">
+    <p class="sponsored-label">Supported by</p>
+    <div class="sponsor-grid">
+      <a class="sponsor-card" href="https://viditrack.com" target="_blank">
+        <div class="sponsor-logo">
+          <img src="images/viditrack-logo.svg" />
+        </div>
+        <div>
+          <h4>Viditrack Ltd</h4>
+          <p>viditrack.com</p>
+          <span class="sponsor-tier tier-gold">Gold Sponsor</span>
+        </div>
+      </a>
+      <!-- <a class="sponsor-card" href="#">
+        <div class="sponsor-logo" style="background:rgba(65,104,152,0.1);">🚀</div>
+        <div>
+          <h4>Your Startup</h4>
+          <p>yourstartup.io</p>
+          <span class="sponsor-tier tier-silver">Silver Sponsor</span>
+        </div>
+      </a>
+      <a class="sponsor-card" href="#">
+        <div class="sponsor-logo" style="background:rgba(65,104,152,0.1);">💡</div>
+        <div>
+          <h4>Your Studio</h4>
+          <p>yourstudio.dev</p>
+          <span class="sponsor-tier tier-silver">Silver Sponsor</span>
+        </div>
+      </a> -->
+    </div>
+    <p class="sponsor-cta">
+      This project is BSD-licensed and maintained in spare time.
+      <a href="https://github.com/sponsors/alex-gutev">Sponsor on GitHub →</a>
+    </p>
+  </div>
+</section>
+
+<!-- CTA STRIP -->
+<section class="cta-strip">
+  <div class="container cta-inner">
+    <h2>Ready to make your state <em>actually</em> reactive?</h2>
+    <div style="display:flex;gap:1rem;flex-wrap:wrap">
+      <a href="docs/intro" class="btn-primary">Read the docs →</a>
+      <a href="https://github.com/alex-gutev/live_cells" class="btn-secondary">GitHub</a>
+    </div>
+  </div>
+</section>
+
+<!-- QUICK START -->
+<section id="quickstart">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:1fr 1.1fr;gap:3rem;align-items:start">
+      <div>
+        <p class="section-label">Quick Start</p>
+        <h2 class="section-title">Up and running<br />in minutes</h2>
+        <p class="section-sub">Three steps from zero to reactive Flutter app.</p>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num"></div>
+          <div>
+            <h4>Add the dependency</h4>
+            <p><code>flutter pub add live_cells</code> — or add <code>live_cells: ^0.34.0</code> to your <code>pubspec.yaml</code>.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num"></div>
+          <div>
+            <h4>Import &amp; define cells</h4>
+            <p>Import <code>package:live_cells/live_cells.dart</code> and declare your state as <code>MutableCell</code> instances at the top of your logic layer.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num"></div>
+          <div>
+            <h4>Bind to widgets</h4>
+            <p>Wrap rebuilding UI in <code>CellWidget.builder</code>, or swap Flutter widgets for their <code>Live*</code> equivalents. Done.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <p style="margin-bottom:0.5rem">
+      <a href="https://livecell.gutev.dev/">Live Cells</a> &nbsp;·&nbsp;
+      <a href="https://pub.dev/packages/live_cells">pub.dev</a> &nbsp;·&nbsp;
+      <a href="https://github.com/alex-gutev/live_cells">GitHub</a> &nbsp;·&nbsp;
+      <a href="docs/intro">Documentation</a>
+    </p>
+    <p>BSD-3-Clause license &nbsp;·&nbsp; Published by <a href="https://gutev.dev">gutev.dev</a></p>
+  </div>
+</footer>
+
+<script>
+  const slider = document.getElementById('demo-slider');
+  const numEl  = document.getElementById('demo-num');
+  const strEl  = document.getElementById('demo-str');
+  const dblEl  = document.getElementById('demo-doubled');
+
+  slider.addEventListener('input', () => {
+    const v = parseInt(slider.value, 10);
+    numEl.textContent = v;
+    strEl.textContent = `"${v}"`;
+    dblEl.textContent = v * 2;
+  });
+</script>
+</body>
+</html>
