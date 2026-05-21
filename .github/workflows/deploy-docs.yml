@@ -21,7 +21,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
-	  path: docs-src
+          path: docs-src
 
       - run: npm ci
       - run: npm run build
