@@ -1,3 +1,61 @@
+# 0.34.0
+
+New Features:
+
+* Action cell `.watch()` method:
+
+  Allows you to register a watch function on an action cell directly:
+
+  ```dart
+  final action = ActionCell();
+  
+  action.watch(() {
+    print('action was triggered');
+  })
+  ```
+
+* `initial` argument on `MetaCell` constructor:
+
+  This allows you to create a `MetaCell` that points to
+  an *initial* cell:
+
+  ```dart
+  final m = MetaCell(1.cell);
+  
+  // Prints 'm = 1'
+  ValueCell.watch(() {
+    print('m = ${m()}');
+  });
+  ```
+
+  The `inital` argument is also available on `MetaCell.mutable`
+  `MetaCell.action`.
+
+Fixes:
+
+* Fix compilation issues on Flutter 3.41.0
+
+Breaking Changes:
+
+* Minimum Flutter version is now 3.41.0.
+
+# 0.33.0
+
+* Changes:
+
+  * Upgraded minimum Flutter version to 3.38.0.
+
+# 0.32.0
+
+* New Widgets:
+
+  * `LiveRadioGroup`
+  * `LiveTextFormField`
+
+* Changes
+
+  * Upgraded minimum Flutter version to 3.35.0.
+
 # 0.31.0
 
 New features:

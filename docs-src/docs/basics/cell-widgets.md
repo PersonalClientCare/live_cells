@@ -7,9 +7,9 @@ sidebar_position: 2
 # Cells in Widgets
 
 The simplest way to use the value of a cell in a widget is with
-`CellWidget.builder`, which creates a widget that observes one or more
-cells. Whenever the values of the observed cells change, the widget is
-rebuilt.
+[`CellWidget.builder`](https://pub.dev/documentation/live_cells/latest/live_cells/CellWidget/CellWidget.builder.html),
+which creates a widget that observes one or more cells. Whenever the
+values of the observed cells change, the widget is rebuilt.
 
 ```dart title="CellWidget.builder"
 CellWidget.builder((context) => Text('Count: ${count()}'));
@@ -103,7 +103,7 @@ CellWidget.builder((context) {
 });
 ```
 
-In the example above, two separate cells are defined in a single build
+In this example, two separate cells are defined in a single build
 function, each representing a different counter.
 
 :::warning 
@@ -207,7 +207,8 @@ CellWidget.builder((context) {
 We'll be using `CellWidget.builder` throughout the documentation,
 since its succinct and convenient. However, if you want to make a
 widget which will be used in more than one place, you should subclass
-`CellWidget` instead.
+[`CellWidget`](https://pub.dev/documentation/live_cells/latest/live_cells/CellWidget-class.html)
+instead.
 
 A `CellWidget` subclass can observe and define cells, and watch
 functions, in the `build` method, just like `CellWidget.builder`:
@@ -239,5 +240,65 @@ you should avoid placing definitions within loops and
 conditionals. Cell keys will be covered in the advanced section of the
 documentation but if you're curious you can skip ahead to [Cell
 Keys](/docs/advanced/cell-keys).
+
+:::
+
+## Cells in Jaspr Components
+
+The [`live_cells_jaspr`](https://pub.dev/packages/live_cells_jaspr)
+package provides
+[`CellComponent`](https://pub.dev/documentation/live_cells_jaspr/latest/live_cells_jaspr/CellComponent-class.html),
+which allows you to observe cells in [Jaspr](https://jaspr.site/)
+`Component`s.
+
+To use `live_cells_jaspr` in a Jaspr project, you'll need to add the
+`live_cells_core` and `live_cells_jaspr` packages to your project's
+dependencies:
+
+```sh
+dart pub add live_cells_core
+dart pub add live_cells_jaspr
+```
+
+:::info
+
+Jaspr, and other pure Dart, projects should depend on
+`live_cells_core` rather than `live_cells` since the latter depends on
+Flutter which is incompatible with pure Dart projects.
+
+:::
+
+`CellComponent` is used exactly like `CellWidget`. For example, the
+`Counter` widget from the previous section can be converted to a Jaspr
+component as follows:
+
+```dart title="CellComponent subclass"
+import 'package:jaspr/jaspr.dart';
+import 'package:live_cells_core/live_cells_core.dart';
+import 'package:live_cells_jaspr/live_cells_jaspr.dart';
+
+class Counter extends CellComponent {
+  @override
+  Component build(BuildContext context) {
+    final count = MutableCell(0);
+    
+    ValueCell.watch(() => print('Count: ${count()}'));
+    
+    return button(
+      onClick: () => count.value++,
+      [
+        text('${count()}')
+      ]
+    );
+  }
+}
+```
+
+:::important
+
+At the moment `live_cells_jaspr` has only been tested with static
+rendering mode. See [Rendering
+Modes](https://docs.jaspr.site/get_started/modes) for more information
+about the rendering modes provided by Jaspr.
 
 :::

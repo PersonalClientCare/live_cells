@@ -1013,37 +1013,22 @@ of the cell is false.
 See [LiveSwitch] for a more detailed explanation.
 '''),
   WidgetSpec<Radio>(
-      as: #LiveRadio,
-      typeArguments: [
-        'T'
-      ],
-      mutableProperties: [
-        #groupValue
-      ],
-      excludeProperties: [
-        #onChanged,
-        #enabled,
-        #groupRegistry
-      ],
-      cellProperties: [
-        #groupValue
-      ],
-      propertyTypes: {
-        #value: 'T',
-        #groupValue: 'T?'
-      },
-      propertyValues: {
-        #onChanged: 'enabled() ? (v) => groupValue?.value = v : null',
-      },
-      addProperties: [
-        WidgetPropertySpec<bool>(
-            name: #enabled,
-            optional: false,
-            defaultValue: 'true',
-            documentation: 'Is the widget enabled for user input?')
-      ],
-      documentation:
-          '''A [Radio] widget with the [groupValue] controlled by a [MutableCell].
+    as: #LiveRadio,
+    typeArguments: ['T'],
+    mutableProperties: [#groupValue, #enabled],
+    excludeProperties: [#onChanged],
+    cellProperties: [#groupValue, #enabled],
+
+    propertyTypes: {
+      #value: 'T',
+      #groupValue: 'T?',
+      #groupRegistry: 'RadioGroupRegistry<T>?'
+    },
+    propertyValues: {
+      #onChanged: '(v) => groupValue?.value = v',
+    },
+
+    documentation: '''A [Radio] widget with the [groupValue] controlled by a [MutableCell].
 
 The [groupValue] is controlled by a [MutableCell] which is passed on construction.
 When the value of the cell changes, the state of the widget is updated to reflect the
@@ -1053,29 +1038,51 @@ user, the value of the cell is updated to reflect the state.
 The cell provided for [enabled] controls whether the widget is enabled for user
 interaction, when the value of the cell is true, or disabled, when the value
 of the cell is false.
-'''),
-  WidgetSpec<RadioListTile>(as: #LiveRadioListTile, typeArguments: [
-    'T'
-  ], mutableProperties: [
-    #groupValue
-  ], cellProperties: [
-    #groupValue
-  ], excludeProperties: [
-    #onChanged,
-    #enabled,
-    #groupRegistry
-  ], propertyTypes: {
-    #value: 'T',
-    #groupValue: 'T?'
-  }, propertyValues: {
-    #onChanged: 'enabled() ? (v) => groupValue?.value = v : null',
-  }, addProperties: [
-    WidgetPropertySpec<bool>(
-        name: #enabled,
-        optional: false,
-        defaultValue: 'true',
-        documentation: 'Is the widget enabled for user input?')
-  ], documentation: '''A [ListTile] with a [LiveRadio], akin to [RadioListTile].
+'''
+  ),
+
+  WidgetSpec<RadioGroup>(
+      as: #LiveRadioGroup,
+      typeArguments: ['T'],
+      mutableProperties: [#groupValue],
+      excludeProperties: [#onChanged],
+      cellProperties: [#groupValue],
+
+      propertyValues: {
+        #onChanged: '(v) => groupValue?.value = v',
+      },
+
+      propertyTypes: {
+        #groupValue: 'T?'
+      },
+
+      documentation: '''A [RadioGroup] widget with the [groupValue] controlled by a [MutableCell].
+
+The [groupValue] is controlled by a [MutableCell] which is passed on construction.
+When the value of the cell changes, the state of the RadioGroup is updated to reflect the
+value of the cell. Similarly when the state of the RadioGroup is changed by the
+user, the value of the cell is updated to reflect the state.
+'''
+  ),
+
+  WidgetSpec<RadioListTile>(
+    as: #LiveRadioListTile,
+    typeArguments: ['T'],
+    mutableProperties: [#groupValue, #enabled],
+    cellProperties: [#groupValue, #enabled],
+    excludeProperties: [#onChanged],
+
+    propertyTypes: {
+      #value: 'T',
+      #groupValue: 'T?',
+      #groupRegistry: 'RadioGroupRegistry<T>?'
+    },
+    propertyValues: {
+      #onChanged: '(v) => groupValue?.value = v',
+    },
+
+
+    documentation: '''A [ListTile] with a [LiveRadio], akin to [RadioListTile].
 
 See [LiveRadio] for a more detailed explanation.
 '''),
